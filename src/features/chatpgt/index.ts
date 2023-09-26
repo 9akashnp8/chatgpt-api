@@ -26,7 +26,7 @@ export default async function getAiResponse(prompt: string) {
 
     const aiResponse = await page.getByTestId("conversation-turn-3").textContent()
 
-    return aiResponse
+    return aiResponse?.slice(12)
 }
 
 
