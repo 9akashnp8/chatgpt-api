@@ -19,10 +19,17 @@ async function main() {
 
     await page.getByText("Okay, let’s go").click()
 
+    await page.locator(".truncate").click()
+
     await page.locator("#prompt-textarea").fill("Hello there!")
 
     await page.getByTestId("send-button").click()
     
+    await page.waitForTimeout(3000)
+
+    const aiResponse = await page.getByTestId("conversation-turn-3").textContent()
+
+    console.log(aiResponse)
 }
 
 main()
