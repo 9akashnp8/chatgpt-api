@@ -1,32 +1,40 @@
-import playwright from "playwright";
+import playwright, { Browser as PWBrowser, Page as PWPage } from "playwright";
 
 import { cookies } from "./cookies.js";
 
-export default async function getAiResponse(prompt: string) {
-    const browser = await playwright.chromium.launch({ headless: true });
+export class Browser {
+    instance: PWBrowser
+    page: PWPage
 
-    const context = await browser.newContext({
-        userAgent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36"
-    });
-    const page = await context.newPage();
+    async createBrowserInstance() {
+        const browser = await playwright.chromium.launch();
+        const context = await browser.newContext({
+            userAgent: process.env["USER_AGENT"]
+        });
+        await context.addCookies(cookies)
+        return browser;
+    }
     
-    await context.addCookies(cookies)
+    async setup() {
+        this.instance = await this.createBrowserInstance();
+        this.page = await this.instance?.contexts()[0].newPage()
+        await this.page?.goto("https://chat.openai.com/c/b803f5f8-f8b9-4bbf-8965-ac1a1f1075c0");
+        await this.page?.getByText("Okay, let’s go").click()
+        await this.page?.locator(".truncate").click()
+    }
 
-    await page.goto("https://chat.openai.com/c/b803f5f8-f8b9-4bbf-8965-ac1a1f1075c0");
+    async sendMessage(message: string) {
+        await this.page?.locator("#prompt-textarea").fill(message)
+        await this.page?.getByTestId("send-button").click()
+    }
 
-    await page.getByText("Okay, let’s go").click()
-
-    await page.locator(".truncate").click()
-
-    await page.locator("#prompt-textarea").fill("Hello there!")
-
-    await page.getByTestId("send-button").click()
-    
-    await page.waitForTimeout(5000)
-
-    const aiResponse = await page.getByTestId("conversation-turn-3").textContent()
-
-    return aiResponse?.slice(12)
+    async getAiResponse(prompt: string) {
+        await this.page?.waitForTimeout(5000)
+        const aiResponse = await this.page
+            .getByTestId("conversation-turn-3")
+            .textContent()
+        return aiResponse?.slice(12)
+    }
 }
 
 
