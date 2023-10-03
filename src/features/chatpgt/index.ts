@@ -7,7 +7,7 @@ export class Browser {
     page: PWPage
 
     async createBrowserInstance() {
-        const browser = await playwright.chromium.launch();
+        const browser = await playwright.chromium.launch({ headless: false });
         const context = await browser.newContext({
             userAgent: process.env["USER_AGENT"]
         });
@@ -26,9 +26,11 @@ export class Browser {
     async sendMessage(message: string) {
         await this.page?.locator("#prompt-textarea").fill(message)
         await this.page?.getByTestId("send-button").click()
+        const response = await this.getAiResponse()
+        return response
     }
 
-    async getAiResponse(prompt: string) {
+    async getAiResponse() {
         await this.page?.waitForTimeout(5000)
         const aiResponse = await this.page
             .getByTestId("conversation-turn-3")

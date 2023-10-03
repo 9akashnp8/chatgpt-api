@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import getAiResponse from "../../chatpgt/index.js";
+import { browserInstance } from "../../../app.js";
 
 type UserPrompt = {
     prompt: string
@@ -15,6 +15,7 @@ export async function conversationController(
 ) {
     if (req.query.mock) res.send("mock response")
     const { body } = req;
-    const response = await getAiResponse(body.prompt);
+    const response = await browserInstance
+        .sendMessage(body.prompt);
     res.send(response)
 }
